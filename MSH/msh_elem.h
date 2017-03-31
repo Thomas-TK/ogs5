@@ -123,6 +123,22 @@ public:
 	{
 		return representative_length;
 	}
+	double GetDebugValue() 
+	{
+		return debug_value;					 //TK ONLY for DEBUG
+	}                                         
+	void SetDebugValue(double anydoublevalue)
+	{
+		debug_value = anydoublevalue;        //TK ONLY for DEBUG
+	}
+	int GetNumberOfParticlesPerElement() 
+	{
+		return particles_per_element;					 //TK for particle tracking
+	}                                         
+	void SetNumberOfParticlesPerElement(int anyintvalue)
+	{
+		particles_per_element = anyintvalue;        //TK for particle tracking
+	}
 	//------------------------------------------------------------------
 	// ID
 	MshElemType::type GetElementType() const { return geo_type; }
@@ -306,6 +322,8 @@ private:
 	double gravity_center[3];
 	int grid_adaptation; // Flag for grid adapting.
 	size_t patch_index;
+	double debug_value;
+	int particles_per_element;
 	/*
 	   // Since m_tim->CheckCourant() is deactivated, the following member are
 	   // put in comment.

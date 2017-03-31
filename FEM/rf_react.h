@@ -13,6 +13,7 @@
 #define reactions_INC
 
 #include <vector>
+#include "rf_random_walk.h"
 
 /* Structure for exchange of reaction rates */
 class REACT
@@ -48,8 +49,7 @@ public:
 	int rcml_pH_flag; /* =0, pH constant; =1 (default), pH will change  */
 	int rcml_pe_flag; /* =0, pe constant; =1 (default), pe will change  */
 	int rcml_heat_flag; /* =0, temp constant (default); =1 , temp will change  */
-	int rcml_number_of_pqcsteps; /* Anzahl der Reaktionsschritte in PHREEQC aus dem Befehl: -steps "time" in "pqcsteps"
-	                                steps */
+	int rcml_number_of_pqcsteps;          /* Anzahl der Reaktionsschritte in PHREEQC aus dem Befehl: -steps "time" in "pqcsteps" steps */
 	int rcml_pH_charge; /* =0, no charge balance for pH; =1, used for charge balance (keyword charge in line with pH*/
 	char* outfile; /* Ausgabefile von PHREEQC */
 	std::string file_name_pqc; // Name of pqc file in GeoSys project (*.pqc)
@@ -69,17 +69,21 @@ public:
 	void InitREACT(void);
 	void ExecuteReactionsPHREEQC(void);
 	void ExecuteReactionsPHREEQCNew(void);
+	void ExecuteReactionsIPhreeqc_RWPT(std::string, std::vector<Trace> *particlelist, double, double,double, double);
 	void ExecutePQCString(void); // WH
 	int WriteInputPQCString(long, std::stringstream*, bool); // WH
 	void TestPHREEQC(std::string);
 	int Call_Phreeqc(void);
+	int  CallIPhreeqc4Particles(std::string);
 	void GetTransportResults(void);
 	int ReadReactionModel(FILE* File);
 	int ReadReactionModelNew(std::ifstream*);
 	// fsout removed 3912
 	int ReadInputPhreeqc(long index, FILE* fpqc, FILE* Fphinp);
 	int WriteInputPhreeqc(long, /*ifstream*,*/ std::ofstream*);
+	int  WriteRWPTInputIPhreeqc(int, long, std::vector<Trace> *particlelist, std::ofstream*, double,double,double, double);
 	int ReadOutputPhreeqc(char* fout);
+	int  ReadOutputIPhreeqc4RWPT(std::vector<Trace> *particlelist);
 	int ReadOutputPhreeqcNew(void);
 	int ReadOutputIPQC(std::vector<int> ranknodelist, std::stringstream*, double* m_Conc);
 	void ResetpHpe(void);
@@ -89,6 +93,7 @@ public:
 	void SetNeighborNodesActive(long startnode, long level, int* help);
 	int CheckNoReactionNodes(void);
 	int Teststeps(long nodes);
+	bool UpdateParticleConcentrationValue(std::string,int,Particle *A,double);
 	// Reaction at elements //MX
 	void InitREACT0(void);
 	void ExecuteReactionsPHREEQC0(void);

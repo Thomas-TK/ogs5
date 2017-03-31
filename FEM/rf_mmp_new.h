@@ -311,6 +311,12 @@ public:
 	double graindiameter;
 	double hydraulicrad;
 	double betaexpo;
+
+	//TK Random Walk Particle Tracking
+	double RWPT_porosity;
+	int RWPT_dispersion_model;
+    double RWPT_mass_dispersion_longitudinal;
+	double RWPT_mass_dispersion_transverse;
 };
 
 class CMediumPropertiesGroup // YD

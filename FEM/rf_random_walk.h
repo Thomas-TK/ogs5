@@ -16,6 +16,7 @@
 #ifndef break_RWPT // OK
 #define break_RWPT // OK
 
+//#include "Configure.h"
 #include "rf_mmp_new.h"
 #include "rfmat_cp.h"
 
@@ -25,17 +26,21 @@ class Particle
 {
 public:
 	// Position Vector
+	double x_start;
+	double y_start;
+	double z_start;
+	// Position Vector
 	double x;
 	double y;
 	double z;
 	int on_boundary; // YS
-
+	int outside;
 	// Velocity Vector
 	double Vx;
 	double Vy;
 	double Vz;
 
-	// Konductivity
+	// Conductivity
 	double K;
 
 	// Dispersion coefficient tensor
@@ -50,11 +55,23 @@ public:
 	double t;
 	double StartingTime; // JT 2010, added for continuous particle boundary, segemented by StartingTime
 
+
 	// the element it belongs to
 	int elementIndex;
+	int starting_elementIndex;
 	int edgeIndex;
 	// particle identity
 	int identity;
+
+	// particle chemistry
+	double pressure_head_value;
+	double capillary_pressure;
+	double saturation_value;
+	std::vector<double> conc_value_at_particle; //the order is the same as k in cp_vec[k]
+	std::vector<std::string> conc_value_names_at_particle; //the order is the same as k in cp_vec[k]
+
+	//element neighbors of particle for accerlarated pre-search
+	std::vector<int> near_element_indexes;
 
 	// Constructor
 	Particle(void);
@@ -78,6 +95,10 @@ public:
 		dVydy = B.dVydy;
 		dVzdz = B.dVzdz;
 		on_boundary = B.on_boundary;
+		pressure_head_value = B.pressure_head_value;
+		saturation_value = B.saturation_value;
+		conc_value_at_particle = B.conc_value_at_particle;
+		conc_value_names_at_particle = B.conc_value_names_at_particle;
 
 		for (int i = 0; i < 9; ++i)
 			D[i] = B.D[i];
@@ -107,6 +128,7 @@ public:
 	// This may be a global variable somewhere in application-level later.
 	// For now, I just created here.
 	int numOfParticles;
+	int numOfPTReadParticles;
 	int UniformOrNormal;
 	int leavingParticles;
 	int srand_seed;
@@ -116,6 +138,7 @@ public:
 	// 3: Advection only for heterogeneous media
 	// 4: Dispersion only for homogeneous media
 	// 5: Dispersion only for heterogeneous media
+	int RWPT_ChemMode;
 	int PURERWPT; // 0: Defualt - Velocity solved by GeoSys
 	// 1: Velocity fields on nodes are given in a separate file.
 	// 2: Velocity solved as in FDM approach
@@ -134,7 +157,10 @@ public:
 		int k;
 		int eleIndex;
 
-		FDMIndex(void) { i = j = k = eleIndex = -10; }
+		FDMIndex(void)
+		{
+			i = j = k = eleIndex = -10;
+		}
 	};
 
 	class Position
@@ -164,11 +190,16 @@ public:
 
 	double randomMinusOneToOne(void); // create uniform random number between -1 and 1
 	double randomZeroToOne(void); // create uniform random number between 0 and 1
-
+	double randomMinusLDtoLD(void);
 	void AdvanceToNextTimeStep(double dt, double ctime);
 	void AdvanceBySplitTime(double dt, int numOfSplit);
 	void TraceStreamline(void);
-	void GetDisplacement(Particle* B, double* Z, double* V, double* dD, double time, double* dsp);
+	void GetDisplacement(Particle* B,
+	                     double* Z,
+	                     double* V,
+	                     double* dD,
+	                     double time,
+	                     double* dsp);
 
 	void RandomlyDriftAway(Particle* A, double dt, double* delta, int type);
 	int RandomWalkDrift(double* Z, int type);
@@ -185,7 +216,8 @@ public:
 	int GetTheElementOfTheParticleFromNeighbor(Particle* A);
 	int GetTheElementOfTheParticle(Particle* Pold, Particle* Pnew);
 	int SearchElementFromNeighbor(Particle* A);
-	int CheckElementIndex(Particle* A);
+	int CheckElementIndex(Particle* A, int index);
+	void FindElementsInTheNeighborhood(Particle* A, int center_element);
 
 	int IsParticleOnTheEdge(Particle* A);
 
@@ -215,6 +247,14 @@ public:
 	// Rate-limited reaction - sorption and desorption
 	double Two_rateModel(double A, double k1, double k2, double t);
 	CRFProcess* getFlowPCS() const { return flow_pcs; }
+
+	//A Fuction-Test-Space
+	void TestSaturationIntegration(int particle_id);
+	void TestChemistryIntegration(int particle_id);
+    void SolveAllParticlesReactionsIPhreeqc(std::vector<Trace> *particlelist, double subtimestep_length, double subtimestep_time,double simulation_sub_time, double simulation_current_time);
+	int GetNextFEMNodeOfParticle(int particle_id);
+	void InitializeParticleChemistrySystem(int);
+	void ReloadStartPosition(int every_nth_time_step);
 protected:
 	FiniteElement::CFiniteElementStd* fem;
 
@@ -238,15 +278,26 @@ private:
 
 	double ComputeVolume(Particle* A, MeshLib::CElem* m_ele);
 	double ComputeVolume(Particle* A, Particle* element, MeshLib::CElem* m_ele);
-	void CopyParticleCoordToArray(Particle* A, double* x1buff, double* x2buff, double* x3buff, double* x4buff);
+	void CopyParticleCoordToArray(Particle* A,
+	                              double* x1buff,
+	                              double* x2buff,
+	                              double* x3buff,
+	                              double* x4buff);
 
-	void GetNodeOfMiniFEMforTheEdge(MeshLib::CNode* theNode, MeshLib::CEdge* theEdge, Particle* A);
+	void GetNodeOfMiniFEMforTheEdge(MeshLib::CNode* theNode,
+	                                MeshLib::CEdge* theEdge,
+	                                Particle* A);
 	void CheckBoundary2D(Particle* A, Particle* B);
 	void CheckBoundary3D(Particle* A, Particle* B);
 
-	int G_intersect_line_segments(double ax1, double ay1, double ax2, double ay2, double bx1, double by1, double bx2,
-	                              double by2, double* ra, double* rb, double* x, double* y);
-	int G_intersect_line_segments_3D(double* pl1, double* pl2, double* pp1, double* pp2, double* pp3, double* pi);
+	int G_intersect_line_segments (
+	        double ax1,double ay1, double ax2,double ay2,
+	        double bx1,double by1, double bx2,double by2,
+	        double* ra,double* rb,
+	        double* x,double* y);
+	int G_intersect_line_segments_3D(
+	        double* pl1,double* pl2, double* pp1,double* pp2,
+	        double* pp3,double* pi);
 	void ConcPTFile(const char* file_name);
 
 	/**
@@ -258,4 +309,5 @@ private:
 
 extern void PCTRead(std::string);
 extern void DATWriteParticleFile(int);
+extern void DATWriteParticleControlPlaneFile(int,string,double);
 #endif // OK

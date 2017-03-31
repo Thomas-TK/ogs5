@@ -189,4 +189,7 @@ extern double aktuelle_zeit;
 extern size_t aktueller_zeitschritt;
 extern double dt;
 extern int rwpt_numsplits; // JT 2010, for specifying sub time step for random walker in .tim input file
+extern int rwpt_reload_method;
+extern int rwpt_every_nth_time_step;
+
 #endif

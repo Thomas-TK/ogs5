@@ -23,8 +23,9 @@
 #include "fem_ele_std.h" // for element velocity
 #include "makros.h"
 #include "rf_mmp_new.h"
-#include "FileTools.h"
 #include "OutputTools.h"
+#include "FileTools.h"
+#include "rf_random_walk.h"
 
 using namespace std;
 
@@ -1122,6 +1123,8 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 		str_format = "appended";
 
 	bool outEleVelocity = false;
+	bool any_debug_value = false;
+	bool particles_per_element_value = false;
 
 	// Element values
 	for (int i = 0; i < (int)ele_value_index_vector.size(); i++)
@@ -1131,6 +1134,17 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 			outEleVelocity = true;
 			continue;
 		}
+		if (out->getElementValueVector()[i].find("CURRENT_DEBUG_VALUE") != string::npos)
+		{
+			any_debug_value = true;
+			continue;
+		}
+		if (out->getElementValueVector()[i].find("PARTICLES_PER_ELEMENT") != string::npos)
+		{
+			particles_per_element_value = true;
+			continue;
+		}
+		//m_pcs = 
 		m_pcs = out->GetPCS_ELE(out->getElementValueVector()[i]);
 
 		if (!useBinary || !output_data)
@@ -1303,7 +1317,7 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 			WriteDataArrayFooter(fin);
 	}
 
-	// MMP
+	//MMP VALUES OUTPUT
 	if (out->mmp_value_vector.size() > 0)
 	{
 		for (size_t i_mmp = 0; i_mmp < out->mmp_value_vector.size(); i_mmp++)
@@ -1329,13 +1343,7 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 					for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++)
 					{
 						ele = msh->ele_vector[i_e];
-						ele->SetOrder(false);
-						CFiniteElementStd* fem = m_pcs->GetAssember();
-						fem->ConfigElement(ele, false);
-						fem->Config();
-						fem->getShapeFunctionCentroid();
-						CMediumProperties* mmp = mmp_vector[ele->GetPatchIndex()];
-						double mat_value = ELEMENT_MMP_VALUES::getValue(mmp, mmp_id, i_e, 0, 1.0);
+                        double mat_value = getElementMMP(mmp_id, ele, m_pcs);
 						fin << mat_value << " ";
 					}
 					fin << "\n";
@@ -1365,26 +1373,29 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 	// MFP
 	if (out->mfp_value_vector.size() > 0)
 	{
-		for (size_t i_mfp = 0; i_mfp < out->mfp_value_vector.size(); i_mfp++)
-		{
+//        double gp[3] = {.0, .0, .0};
+//        double theta = 1.0;
+  		  static double dbuff0[20];
+
+
+        for (size_t i_mfp=0; i_mfp<out->mfp_value_vector.size(); i_mfp++) {
 			const std::string& mfp_name = out->mfp_value_vector[i_mfp];
 			int mfp_id = ELEMENT_MFP_VALUES::getMFPIndex(mfp_name);
-			if (mfp_id < 0)
-				continue;
+            if (mfp_id<0) continue;
 
 			if (!useBinary || !output_data)
 				WriteDataArrayHeader(fin, this->type_Double, mfp_name, 0, str_format, offset);
 
 			if (output_data)
 			{
-				if (m_pcs == NULL)
-				{
+                if (m_pcs==NULL) {
 					m_pcs = PCSGetFlow();
 				}
 
 				if (!this->useBinary)
 				{
 					fin << "          ";
+                    int gp_r, gp_s, gp_t;
 					for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++)
 					{
 						ele = msh->ele_vector[i_e];
@@ -1392,9 +1403,10 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 						CFiniteElementStd* fem = m_pcs->GetAssember();
 						fem->ConfigElement(ele, false);
 						fem->Config();
-						fem->getShapeFunctionCentroid();
+                        fem->SetGaussPoint(0, gp_r, gp_s, gp_t);
+                        fem->ComputeShapefct(1, dbuff0);
 						CFluidProperties* mfp = mfp_vector[0];
-						mfp->SetFemEleStd(fem);
+                        mfp->Fem_Ele_Std = fem;
 						double mat_value = ELEMENT_MFP_VALUES::getValue(mfp, mfp_id);
 						fin << mat_value << " ";
 					}
@@ -1404,23 +1416,143 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 				{
 					// OK411
 					write_value_binary<unsigned int>(fin, sizeof(int) * (long)msh->ele_vector.size());
-					for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++)
-					{
+                    for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++) {
 						ele = msh->ele_vector[i_e];
 						CFluidProperties* mfp = mfp_vector[0];
 						double mat_value = ELEMENT_MFP_VALUES::getValue(mfp, mfp_id);
 						write_value_binary(fin, mat_value);
 					}
 				}
+            } else {
+                offset += (long)msh->ele_vector.size() * sizeof(double) + SIZE_OF_BLOCK_LENGTH_TAG;
+            }
+
+            if (!useBinary || !output_data)
+                WriteDataArrayFooter(fin);
+        }
+    }
+
+    // PARTICLES_PER_ELEMENT
+	if(particles_per_element_value == true)
+	{
+		int number_of_particles = 0.0;
+		int all_number_of_particles = 0.0;
+		if (!useBinary || !output_data)
+			WriteDataArrayHeader(fin, this->type_Int, "PARTICLES_PER_ELEMENT", 0, str_format, offset);
+		if (output_data)
+		{
+			if (!this->useBinary)
+			{
+				fin << "          ";
+				for(long i = 0; i < (long)msh->ele_vector.size(); i++)
+				{
+					ele = msh->ele_vector[i];
+					fin << ele->GetNumberOfParticlesPerElement() << " ";
+					number_of_particles = ele->GetNumberOfParticlesPerElement();
+					all_number_of_particles = all_number_of_particles + number_of_particles; 
+				}
+				fin << "\n";
 			}
 			else
 			{
-				offset += (long)msh->ele_vector.size() * sizeof(double) + SIZE_OF_BLOCK_LENGTH_TAG;
+				//OK411
+				write_value_binary<unsigned int>(
+				        fin,
+				        sizeof(int) *
+				        (long)msh->ele_vector.size());
+				for (long i = 0; i < (long)msh->ele_vector.size(); i++)
+					write_value_binary(fin, msh->ele_vector[i]->GetNumberOfParticlesPerElement());
+			}
+		}
+		else
+			//OK411
+			offset += (long)msh->ele_vector.size() * sizeof(int) +
+			          SIZE_OF_BLOCK_LENGTH_TAG;
+		if (!useBinary || !output_data)
+			WriteDataArrayFooter(fin);
 			}
 
+
+   // ++ PARTICLES_PER_ELEMENT_PERCENTAGE
+	if(particles_per_element_value == true)
+	{
+		double particles_in_percent = 0.0;
+		double all_percentage=0.0;
+		if (!useBinary || !output_data)
+			WriteDataArrayHeader(fin, this->type_Double, "PARTICLES_PER_ELEMENT_PERCENTAGE", 0, str_format, offset);
+		if (output_data)
+		{
+			if (!this->useBinary)
+			{
+				fin << "          ";
+				for(long i = 0; i < (long)msh->ele_vector.size(); i++)
+				{				
+					ele = msh->ele_vector[i];
+					particles_in_percent = ((double)ele->GetNumberOfParticlesPerElement()) / (msh->PT->numOfParticles);
+					particles_in_percent = particles_in_percent*100;
+					fin << particles_in_percent << " ";
+					all_percentage = all_percentage + particles_in_percent;
+					if (particles_in_percent > 0.0)
+					{
+						particles_in_percent  = particles_in_percent ;
+					}
+				}
+				fin << "\n";
+			}
+			else
+			{
+				//OK411
+				write_value_binary<unsigned int>(
+				        fin,
+				        sizeof(int) *
+				        (long)msh->ele_vector.size());
+				for (long i = 0; i < (long)msh->ele_vector.size(); i++)
+					write_value_binary(fin, msh->ele_vector[i]->GetNumberOfParticlesPerElement());
+			}
+		}
+		else
+			//OK411
+			offset += (long)msh->ele_vector.size() * sizeof(int) +
+			          SIZE_OF_BLOCK_LENGTH_TAG;
 			if (!useBinary || !output_data)
 				WriteDataArrayFooter(fin);
 		}
+
+
+	//DEBUG INFORMATION
+	if(any_debug_value == true)
+	{
+		if (!useBinary || !output_data)
+			WriteDataArrayHeader(fin, this->type_Double, "CURRENT_DEBUG_VALUE", 0, str_format, offset);
+		if (output_data)
+		{
+			if (!this->useBinary)
+			{
+				fin << "          ";
+				for(long i = 0; i < (long)msh->ele_vector.size(); i++)
+				{
+					ele = msh->ele_vector[i];
+					fin << ele->GetDebugValue() << " ";
+				}
+				fin << "\n";
+			}
+			else
+			{
+				//OK411
+				write_value_binary<unsigned int>(
+				        fin,
+				        sizeof(int) *
+				        (long)msh->ele_vector.size());
+				for (long i = 0; i < (long)msh->ele_vector.size(); i++)
+					write_value_binary(fin, msh->ele_vector[i]->GetDebugValue());
+			}
+		}
+		else
+			//OK411
+			offset += (long)msh->ele_vector.size() * sizeof(int) +
+			          SIZE_OF_BLOCK_LENGTH_TAG;
+		if (!useBinary || !output_data)
+			WriteDataArrayFooter(fin);
 	}
 
 	return true;

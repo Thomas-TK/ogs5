@@ -41,6 +41,8 @@ double aktuelle_zeit;
 size_t aktueller_zeitschritt = 0;
 double dt = 0.0;
 int rwpt_numsplits = -1; // JT 2010
+int rwpt_reload_method = -1;
+int rwpt_every_nth_time_step = -1;
 //==========================================================================
 std::vector<CTimeDiscretization*> time_vector;
 /**************************************************************************
@@ -249,6 +251,24 @@ std::ios::pos_type CTimeDiscretization::Read(std::ifstream* tim_file)
 			line >> time_independence;
 			// =0: Process will adopt minimum time step of all processes.
 			// =1: Process will have it's own time step (may not execute on every time step). It will be independent.
+			line.clear();
+			continue;
+		}
+		//....................................................................
+		// subkeyword found
+		if(line_string.find("$RWPT_SPLIT_TIME") != std::string::npos)
+		{
+			line.str(GetLineFromFile1(tim_file));
+			line >> rwpt_numsplits;
+			line.clear();
+			continue;
+		}
+		//....................................................................
+		// subkeyword found
+		if(line_string.find("$RWPT_RELOAD") != std::string::npos)
+		{
+			line.str(GetLineFromFile1(tim_file));
+			line >> rwpt_reload_method >> rwpt_every_nth_time_step;
 			line.clear();
 			continue;
 		}
