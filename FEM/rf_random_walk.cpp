@@ -3031,8 +3031,54 @@ void RandomWalk::RandomWalkOutput(double dbl_time, int current_time_step)
 			outputornot = true;
 
 		if (outputornot)
+		{
+			for (size_t j = 0; j < out->_rwpt_string_vector.size(); j++)
+			{
+				if (out->_rwpt_string_vector[j].compare("PARTICLES") == 0)
+				{
+					DATWriteParticleFile(current_time_step);
+				}
+				if (out->_rwpt_string_vector[j].compare("CONTROL_PLANE_NORMAL_X") == 0)
+				{
+					for (size_t k = 0; k < out->_control_plane_x_normal_vector.size(); k++)
+					{
+						DATWriteParticleControlPlaneFile(current_time_step, "CONTROL_PLANE_NORMAL_X", out->_control_plane_x_normal_vector[k]);
+					}
+				}
+				if (out->_rwpt_string_vector[j].compare("CONTROL_PLANE_NORMAL_Y") == 0)
+				{
+					for (size_t k = 0; k < out->_control_plane_y_normal_vector.size(); k++)
+					{
+						DATWriteParticleControlPlaneFile(current_time_step, "CONTROL_PLANE_NORMAL_Y", out->_control_plane_y_normal_vector[k]);
+					}
+				}
+				if (out->_rwpt_string_vector[j].compare("CONTROL_PLANE_NORMAL_Z") == 0)
+				{
+					for (size_t k = 0; k < out->_control_plane_z_normal_vector.size(); k++)
+					{
+						DATWriteParticleControlPlaneFile(current_time_step, "CONTROL_PLANE_NORMAL_Z", out->_control_plane_z_normal_vector[k]);
+					}
+				}
+			}
+			for (size_t j = 0; j < no_times; j++)
+				if (CurrentTime >= out->getRWPTTimeVector()[j])
+				{
+					if (current_name.compare("PARTICLES") == 0)
+						DATWriteParticleFile(current_time_step);
+
+					// else if(current_name.compare("PARTICLE_CONCENTRATION")==0)
+					// DATWriteParticleConcFile(current_time_step); // routine not yet configured (see commented text
+					// below)
+
+					out->getRWPTTimeVector().erase(out->getRWPTTimeVector().begin() + j);
+					break;
+				}
+		}
+/*
+		if (outputornot)
 			if (current_name.compare("PARTICLES") == 0)
 				DATWriteParticleFile(current_time_step);
+<<<<<<< HEAD
 			if (current_name.compare("CONTROL_PLANE_NORMAL_X") == 0)
 			{
 				for (size_t j = 0; j < out->_control_plane_x_normal_vector.size(); j++)
@@ -3042,6 +3088,8 @@ void RandomWalk::RandomWalkOutput(double dbl_time, int current_time_step)
 
 				//out->_control_plane_x_normal_vector.size();
 			}
+=======
+>>>>>>> PullReqestBranch
 		   
 		// else if(current_name.compare("PARTICLE_CONCENTRATION")==0)
 		// DATWriteParticleConcFile(current_time_step); // routine not yet configured
@@ -3059,7 +3107,7 @@ void RandomWalk::RandomWalkOutput(double dbl_time, int current_time_step)
 					        out->getRWPTTimeVector().begin() + j);
 					break;
 				}
-		}
+		}*/
 	}
 
 	//  OUTPUT PARTICLES AS ELEMENTAL CONCENTRATION
@@ -6327,10 +6375,15 @@ void DATWriteParticleFile(int current_time_step)
 	char now[10];
 	sprintf(now, "%i", current_time_step);
 	string nowstr = now;
+<<<<<<< HEAD
 
 	string vtk_file_name = FileName + "_RWPT_";
 	vtk_file_name += nowstr;
 	vtk_file_name += ".particles.vtk";
+=======
+	string vtk_file_name = pathJoin(defaultOutputPath, FileName.substr(FilePath.length(), FileName.length()));
+	vtk_file_name += "_RWPT_" + nowstr + ".particles.vtk";
+>>>>>>> PullReqestBranch
 	fstream vtk_file (vtk_file_name.data(),ios::out);
 	vtk_file.setf(ios::scientific,ios::floatfield);
 	vtk_file.precision(12);
@@ -6370,7 +6423,11 @@ void DATWriteParticleFile(int current_time_step)
 
 	// Write particle on_boundary or not
 	vtk_file << endl;
+<<<<<<< HEAD
     vtk_file << "SCALARS on_boundary int 1" << endl;
+=======
+	vtk_file << "SCALARS on_boundary int 1" << endl;
+>>>>>>> PullReqestBranch
 	vtk_file << "LOOKUP_TABLE default" << endl;
 	for (int i = 0; i < np; ++i)
 		vtk_file << RW->X[i].Now.on_boundary << endl;
@@ -6430,10 +6487,13 @@ void DATWriteParticleFile(int current_time_step)
 	vtk_file.close();
 }
 
+<<<<<<< HEAD
 /**************************************************************************
    OpenGeoSys- Function: DATWriteFile
    Task: Write control plane file
 **************************************************************************/
+=======
+>>>>>>> PullReqestBranch
 void DATWriteParticleControlPlaneFile(int current_time_step, string control_plane_name, double normal_value)
 {
 	CFEMesh* m_msh = NULL;
@@ -6445,13 +6505,19 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 	{
 		//		m_pcs = pcs_vector[i];
 		const FiniteElement::ProcessType pcs_type(pcs_vector[i]->getProcessType());
+<<<<<<< HEAD
 		//		if( m_pcs->pcs_type_name.find("RICHARDS_FLOW")!=string::npos){
+=======
+>>>>>>> PullReqestBranch
 		if( pcs_type == FiniteElement::RICHARDS_FLOW)
 		{
 			m_msh = FEMGet("RICHARDS_FLOW");
 			break;
 		}
+<<<<<<< HEAD
 		//		else if( m_pcs->pcs_type_name.find("LIQUID_FLOW")!=string::npos){
+=======
+>>>>>>> PullReqestBranch
 		else if( pcs_type == FiniteElement::LIQUID_FLOW)
 		{
 			m_msh = FEMGet("LIQUID_FLOW");
@@ -6463,6 +6529,7 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 			break;
 		}
 	}
+<<<<<<< HEAD
 
 	RW = m_msh->PT;
 	int np = RW->numOfParticles;
@@ -6472,6 +6539,13 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 	sprintf(now,"%i",current_time_step);
 	string nowstr = now;
 
+=======
+	RW = m_msh->PT;
+	int np = RW->numOfParticles;
+	char now[10];
+	sprintf(now,"%i",current_time_step);
+	string nowstr = now;
+>>>>>>> PullReqestBranch
 	string vtk_file_name = FileName + "_RWPT_";
 	vtk_file_name += control_plane_name;
 	vtk_file_name += "_";
@@ -6481,11 +6555,15 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 	vtk_file_name += str;
 	vtk_file_name += ".csv";
 	fstream vtk_file;
+<<<<<<< HEAD
 	if (current_time_step==1)
 	vtk_file.open(vtk_file_name.data(),ios::out);
 	else
 	vtk_file.open(vtk_file_name.data(),ios::app);
 	
+=======
+	vtk_file.open(vtk_file_name.data(),ios::app);
+>>>>>>> PullReqestBranch
 	vtk_file.setf(ios::scientific,ios::floatfield);
 	vtk_file.precision(12);
 	if(!vtk_file.good())
@@ -6520,6 +6598,7 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 		if (control_plane_name.compare("CONTROL_PLANE_NORMAL_X")==0)
 		{
 		if ((RW->X[i].Past.x < normal_value && RW->X[i].Now.x > normal_value) || (RW->X[i].Past.x > normal_value && RW->X[i].Now.x < normal_value))
+<<<<<<< HEAD
 		{			
 			back_shift = RW->X[i].Now.x - normal_value;
   			if(RW->X[i].Now.Vx > 0.0) time_correction = back_shift/(RW->X[i].Now.Vx);
@@ -6529,11 +6608,23 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 				     << start_coor[0] << ", " << start_coor[1] << ", " << start_coor[1] << ", " 
 					 << normal_value << ", " << RW->X[i].Now.y << ", " << RW->X[i].Now.z <<", " 
 					 << time_correction << ", " << back_shift <<"\n";
+=======
+		{
+			back_shift = RW->X[i].Now.x - normal_value;
+			if(RW->X[i].Now.Vx > 0.0) time_correction = back_shift/(RW->X[i].Now.Vx);
+			else time_correction = 0.0;
+			arrival_time_control_plane = arrival_time_step_time - time_correction; 
+			vtk_file << i << ", "<< starting_time << ", " << arrival_time_step_time << ", " << arrival_time_control_plane << ", " 
+			<< start_coor[0] << ", " << start_coor[1] << ", " << start_coor[1] << ", " 
+			<< normal_value << ", " << RW->X[i].Now.y << ", " << RW->X[i].Now.z <<", " 
+			<< time_correction << ", " << back_shift <<"\n";
+>>>>>>> PullReqestBranch
 		}
 		}
 		if (control_plane_name.compare("CONTROL_PLANE_NORMAL_Y")==0)
 		{
 		if ((RW->X[i].Past.y < normal_value && RW->X[i].Now.y > normal_value) || (RW->X[i].Past.y > normal_value && RW->X[i].Now.y < normal_value))
+<<<<<<< HEAD
 		{			
 			back_shift = RW->X[i].Now.y - normal_value;
   			if(RW->X[i].Now.Vy > 0.0) time_correction = back_shift/(RW->X[i].Now.Vy);
@@ -6543,11 +6634,23 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 				     << start_coor[0] << ", " << start_coor[1] << ", " << start_coor[1] << ", " 
 					 << RW->X[i].Now.x << ", " << normal_value << ", " << RW->X[i].Now.z <<", " 
 					 << time_correction << ", " << back_shift <<"\n";
+=======
+		{
+			back_shift = RW->X[i].Now.y - normal_value;
+			if(RW->X[i].Now.Vy > 0.0) time_correction = back_shift/(RW->X[i].Now.Vy);
+			else time_correction = 0.0;
+			arrival_time_control_plane = arrival_time_step_time - time_correction; 
+			vtk_file << i << ", "<< starting_time << ", " << arrival_time_step_time << ", " << arrival_time_control_plane << ", " 
+			<< start_coor[0] << ", " << start_coor[1] << ", " << start_coor[1] << ", " 
+			<< RW->X[i].Now.x << ", " << normal_value << ", " << RW->X[i].Now.z <<", " 
+			<< time_correction << ", " << back_shift <<"\n";
+>>>>>>> PullReqestBranch
 		}
 		}
 		if (control_plane_name.compare("CONTROL_PLANE_NORMAL_Z")==0)
 		{
 		if ((RW->X[i].Past.z < normal_value && RW->X[i].Now.z > normal_value) || (RW->X[i].Past.z > normal_value && RW->X[i].Now.z < normal_value))
+<<<<<<< HEAD
 		{			
 			back_shift = RW->X[i].Now.z - normal_value;
   			if(RW->X[i].Now.Vz > 0.0) time_correction = back_shift/(RW->X[i].Now.Vz);
@@ -6812,3 +6915,20 @@ if (rwpt_reload_method==1)
 }
 }
 
+=======
+		{
+			back_shift = RW->X[i].Now.z - normal_value;
+			if(RW->X[i].Now.Vz > 0.0) time_correction = back_shift/(RW->X[i].Now.Vz);
+			else time_correction = 0.0;
+			arrival_time_control_plane = arrival_time_step_time - time_correction; 
+			vtk_file << i << ", "<< starting_time << ", " << arrival_time_step_time << ", " << arrival_time_control_plane << ", " 
+			<< start_coor[0] << ", " << start_coor[1] << ", " << start_coor[1] << ", " 
+			<< RW->X[i].Now.x << ", " << normal_value << ", " << RW->X[i].Now.z <<", " 
+			<< time_correction << ", " << back_shift <<"\n";
+		}
+		}
+	}
+	vtk_file.close();
+}
+
+>>>>>>> PullReqestBranch

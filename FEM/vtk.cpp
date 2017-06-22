@@ -1343,7 +1343,11 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 					for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++)
 					{
 						ele = msh->ele_vector[i_e];
+<<<<<<< HEAD
                         double mat_value = getElementMMP(mmp_id, ele, m_pcs);
+=======
+						double mat_value = getElementMMP(mmp_id, ele, m_pcs);
+>>>>>>> PullReqestBranch
 						fin << mat_value << " ";
 					}
 					fin << "\n";
@@ -1373,12 +1377,19 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 	// MFP
 	if (out->mfp_value_vector.size() > 0)
 	{
+<<<<<<< HEAD
 //        double gp[3] = {.0, .0, .0};
 //        double theta = 1.0;
   		  static double dbuff0[20];
 
 
         for (size_t i_mfp=0; i_mfp<out->mfp_value_vector.size(); i_mfp++) {
+=======
+		static double dbuff0[20];
+
+		for (size_t i_mfp=0; i_mfp<out->mfp_value_vector.size(); i_mfp++) 
+		{
+>>>>>>> PullReqestBranch
 			const std::string& mfp_name = out->mfp_value_vector[i_mfp];
 			int mfp_id = ELEMENT_MFP_VALUES::getMFPIndex(mfp_name);
             if (mfp_id<0) continue;
@@ -1395,7 +1406,11 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 				if (!this->useBinary)
 				{
 					fin << "          ";
+<<<<<<< HEAD
                     int gp_r, gp_s, gp_t;
+=======
+					int gp_r, gp_s, gp_t;
+>>>>>>> PullReqestBranch
 					for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++)
 					{
 						ele = msh->ele_vector[i_e];
@@ -1403,10 +1418,17 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 						CFiniteElementStd* fem = m_pcs->GetAssember();
 						fem->ConfigElement(ele, false);
 						fem->Config();
+<<<<<<< HEAD
                         fem->SetGaussPoint(0, gp_r, gp_s, gp_t);
                         fem->ComputeShapefct(1, dbuff0);
 						CFluidProperties* mfp = mfp_vector[0];
                         mfp->Fem_Ele_Std = fem;
+=======
+						fem->SetGaussPoint(0, gp_r, gp_s, gp_t);
+						fem->ComputeShapefct(1, dbuff0);
+						CFluidProperties* mfp = mfp_vector[0];
+						mfp->Fem_Ele_Std = fem;
+>>>>>>> PullReqestBranch
 						double mat_value = ELEMENT_MFP_VALUES::getValue(mfp, mfp_id);
 						fin << mat_value << " ";
 					}

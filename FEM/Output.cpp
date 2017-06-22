@@ -204,7 +204,11 @@ ios::pos_type COutput::Read(std::ifstream& in_str, const GEOLIB::GEOObjects& geo
 	std::stringstream in;
 	string name;
 	ios::pos_type position_subkeyword;
+<<<<<<< HEAD
 	double double_value = 0.0;
+=======
+	double control_plane_normal_position = 0.0;
+>>>>>>> PullReqestBranch
 
 	// Schleife ueber alle Phasen bzw. Komponenten
 	while (!new_keyword)
@@ -317,6 +321,7 @@ ios::pos_type COutput::Read(std::ifstream& in_str, const GEOLIB::GEOObjects& geo
 					break; // SB: empty line
 				in.str(line_string);
 				in >> name;
+<<<<<<< HEAD
 				_rwpt_value_vector.push_back(name);
 					if (name.compare("CONTROL_PLANE_NORMAL_X")==0)
 					{
@@ -332,6 +337,23 @@ ios::pos_type COutput::Read(std::ifstream& in_str, const GEOLIB::GEOObjects& geo
 					{
 						in >> double_value;
 						_control_plane_z_normal_vector.push_back(double_value);
+=======
+				_rwpt_string_vector.push_back(name);
+					if (name.compare("CONTROL_PLANE_NORMAL_X")==0)
+					{
+						in >> control_plane_normal_position;
+						_control_plane_x_normal_vector.push_back(control_plane_normal_position);
+					}
+					if (name.compare("CONTROL_PLANE_NORMAL_Y")==0)
+					{
+						in >> control_plane_normal_position;
+						_control_plane_y_normal_vector.push_back(control_plane_normal_position);
+					}
+					if (name.compare("CONTROL_PLANE_NORMAL_Z")==0)
+					{
+						in >> control_plane_normal_position;
+						_control_plane_z_normal_vector.push_back(control_plane_normal_position);
+>>>>>>> PullReqestBranch
 					}
 					
 				in.clear();
