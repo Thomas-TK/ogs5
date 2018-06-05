@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -4919,7 +4919,7 @@ void CSolidProperties::CalPrinStrDir(double* stress, double* prin_str, double* p
 	{
 		a[2] = stress[4];
 		a[6] = a[2];
-		a[5] = stress[5];
+		a[5] = stress[6];
 		a[7] = a[5];
 	}
 
@@ -8168,6 +8168,7 @@ double CSolidProperties::E_Function(int dim, const ElementValue_DM* ele_val, int
 			}
 			CalPrinStrDir(stress, prin_str, prin_dir, size);
 			return_value = GetCurveValue((int)E_Function_Model_Value[0], 0, prin_str[0], &valid);
+                        break;
 		}
 		default:
 			return_value = 1.;

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -296,8 +296,6 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 	char seps[] = "+\n";
 	char seps1[] = "*";
 	double f_buff;
-	size_t indexChWin, indexChLinux; // JT, DEC 2009
-	std::string funfname; // JT, DEC 2009
 
 	while (!new_keyword)
 	{
@@ -377,7 +375,6 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 		// ToDo to GeoLib
 		// 2ii..GEOMETRY_AREA
 		//------------------------------------------------------------------------
-		indexChWin = indexChLinux = 0; // JT, DEC 2009
 		// subkeyword found
 		if (line_string.find("$GEOMETRY_AREA") != std::string::npos)
 		{
@@ -386,23 +383,7 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 			if (line_string.find("FILE") != string::npos)
 			{
 				in >> geo_area_file;
-				// JT, Dec. 16, 2009, added lines below to correct and globalize the read of geometry area file
-				std::string file_name = geo_area_file;
-				indexChWin = FileName.find_last_of('\\');
-				indexChLinux = FileName.find_last_of('/');
-				if (indexChWin == string::npos && indexChLinux == std::string::npos)
-					funfname = file_name;
-				else if (indexChWin != string::npos)
-				{
-					funfname = FileName.substr(0, indexChWin);
-					funfname = funfname + "\\" + file_name;
-				}
-				else if (indexChLinux != string::npos)
-				{
-					funfname = FileName.substr(0, indexChLinux);
-					funfname = funfname + "/" + file_name;
-				}
-				geo_area_file = funfname;
+				geo_area_file = FilePath + geo_area_file;
 				// End of new lines
 			}
 			else
@@ -978,6 +959,7 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 					// if -1, threshold is constant
 					in >> permeability_strain_model_value[4]; // lower limit
 					in >> permeability_strain_model_value[5]; // uper limit
+                                        break;
 				default:
 					cout << "Error in MMPRead: no valid permeability strain model"
 					     << "\n";
@@ -1145,8 +1127,7 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 						break;
 					//
 					case 44: // 2-phase Van Genuchten/Mualem Model NON-WETTING
-						// krg = pow(1.0-se,1.0/3.0) * pow(1.0-pow(se,1.0/m),2.0*m)
-						// Se  = (sl - slr) / (slm - slr) --> slr = 1 - sgm --> slm = 1 - sgr
+						// Water Resour. Res. VOL. 23, pp2197-2206 1987. Air
 						in >> residual_saturation[k]; // sgr: residual saturation, this phase
 						in >> maximum_saturation[k]; // sgm: maximum saturation, this phase
 						in >> saturation_exponent[k]; // exponent (always <= 1.0) --> (typical is 0.5) i.e. n = 1 / (1 -
@@ -1198,7 +1179,10 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 						break;
 					//
 					default:
-						ScreenMessage("Error in MMPRead: no valid permeability saturation model.\n");
+						{
+							ScreenMessage("Error in MMPRead: no valid permeability saturation model.\n");
+							abort();
+						}
 						break;
 				}
 				in.clear();
@@ -1784,34 +1768,15 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 		//------------------------------------------------------------------------
 		// 11..PERMEABILITY_DISTRIBUTION
 		//------------------------------------------------------------------------
-		size_t indexChWin, indexChLinux; // WW
-		indexChWin = indexChLinux = 0;
-		std::string funfname;
 		// subkeyword found
 		if (line_string.find("$PERMEABILITY_DISTRIBUTION") != std::string::npos)
 		{
 			in.str(GetLineFromFile1(mmp_file));
 			in >> permeability_file;
-			string file_name = permeability_file;
-			//-------WW
-			indexChWin = FileName.find_last_of('\\');
-			indexChLinux = FileName.find_last_of('/');
-			if (indexChWin == string::npos && indexChLinux == std::string::npos)
-				funfname = file_name;
-			else if (indexChWin != string::npos)
-			{
-				funfname = FileName.substr(0, indexChWin);
-				funfname = funfname + "\\" + file_name;
-			}
-			else if (indexChLinux != string::npos)
-			{
-				funfname = FileName.substr(0, indexChLinux);
-				funfname = funfname + "/" + file_name;
-			}
-			permeability_file = funfname;
+			permeability_file = FilePath + permeability_file;
 			//--------------------------------------
 			// WW
-			std::ifstream mmp_file(funfname.data(), std::ios::in);
+			std::ifstream mmp_file(permeability_file.data(), std::ios::in);
 			if (!mmp_file.good())
 				std::cout << "Fatal error in MMPRead: no PERMEABILITY_DISTRIBUTION file"
 				          << "\n";
@@ -1829,29 +1794,9 @@ std::ios::pos_type CMediumProperties::Read(std::ifstream* mmp_file)
 		{
 			in.str(GetLineFromFile1(mmp_file));
 			in >> porosity_file;
-			string file_name = porosity_file;
-			// else{ //CB this is to get the correct path in case the exe is not run from within the project folder
-			//  pos = (int)FileName.find_last_of('\\', -1) + 1;
-			//  file_name = FileName.substr(0,pos) + porosity_file;
-			//}
-			//-------CB as above by WW
-			indexChWin = FileName.find_last_of('\\');
-			indexChLinux = FileName.find_last_of('/');
-			if (indexChWin == string::npos && indexChLinux == std::string::npos)
-				funfname = file_name;
-			else if (indexChWin != string::npos)
-			{
-				funfname = FileName.substr(0, indexChWin);
-				funfname = funfname + "\\" + file_name;
-			}
-			else if (indexChLinux != string::npos)
-			{
-				funfname = FileName.substr(0, indexChLinux);
-				funfname = funfname + "/" + file_name;
-			}
-			porosity_file = funfname;
+			porosity_file = FilePath + porosity_file;
 			// WW
-			ifstream mmp_file(funfname.data(), ios::in);
+			ifstream mmp_file(porosity_file.data(), ios::in);
 			if (!mmp_file.good())
 				std::cout << "Fatal error in MMPRead: no POROSITY_DISTRIBUTION file"
 				          << "\n";
@@ -2408,6 +2353,7 @@ double CMediumProperties::PermeabilitySaturationFunction(const double wetting_sa
 			break;
 		//
 		case 44: // 2-phase VAN GENUCHTEN/MUALEM --> NON-WETTING
+			// Water Resour. Res. VOL. 23, pp2197-2206 1987. Air
 			slr = 1.0 - maximum_saturation[phase]; // slr = 1.0 - sgm
 			slm = 1.0 - residual_saturation[phase]; // slm = 1.0 - sgr
 			m = saturation_exponent[phase]; // always <= 1.0.  Input is exponent = 1 / (1-lambda)
@@ -4144,7 +4090,6 @@ double CMediumProperties::PorosityEffectiveConstrainedSwellingConstantIonicStren
 
 	/*  porosity_IL = porosity_IL*satu; */
 	porosity_IL = porosity_max * pow(satu, beta);
-	// ElSetElementVal(index,PCSGetELEValueIndex("POROSITY_IL"),porosity_IL);
 	m_pcs->SetElementValue(index, m_pcs->GetElementValueIndex("POROSITY_IL") + 1, porosity_IL);
 
 	/*-----------Effective porosity calculation------------------*/
@@ -4154,7 +4099,6 @@ double CMediumProperties::PorosityEffectiveConstrainedSwellingConstantIonicStren
 	if (porosity < porosity_min)
 		porosity = porosity_min;
 
-	// ElSetElementVal(index,PCSGetELEValueIndex("POROSITY"),porosity);
 	m_pcs->SetElementValue(index, m_pcs->GetElementValueIndex("POROSITY") + 1, porosity);
 
 	/*-----------Swelling strain rate, xie, wang and Kolditz, (23)------------------*/
@@ -6618,78 +6562,6 @@ double CMediumProperties::PorosityEffectiveConstrainedSwelling(long index,
 	return porosity;
 }
 
-/**************************************************************************/
-/* ROCKFLOW - Funktion: CalculateSoilPorosityMethod1
- */
-/* Aufgabe:
-   Berechnet die Porositaet in Abhaengigkeit von der Konzentration
-   (Salzloesungsmodell)
- */
-/* Formalparameter: (E: Eingabe; R: Rueckgabe; X: Beides)
-   E SOIL_PROPERTIES *sp: Zeiger auf eine Instanz vom Typ SOIL_PROPERTIES.
- */
-/* Ergebnis:
-   - s.o. -
- */
-/* Programmaenderungen:
-   02/2000     RK     Erste Version
-   11/2001     AH     Warnung entfernt
-
- */
-/**************************************************************************/
-/*
-   double CalculateSoilPorosityMethod1(SOIL_PROPERTIES * sp, long index)
-   {
-    // double grainbound_limit = 1.73e-8;
-    double porosity_limit = 0.01;
-    int porosity_dependence_model;
-    double val0, val1;
-    static double porosity = 0.0;
-    static double rho;
-    static double theta;
-    static double porosity_n, density_rock;
-   static double dissolution_rate, solubility_coefficient;
-   int timelevel = 1;
-
-   porosity_dependence_model = get_sp_porosity_dependence_model(sp);
-   switch (porosity_dependence_model) {
-   case 1: //Salzloesungsmodell
-   val0 = get_sp_porosity_model_field_value(sp, 0);
-   val1 = get_sp_porosity_model_field_value(sp, 1);
-
-   theta = GetNumericalTimeCollocation("TRANSPORT");
-   density_rock = GetSolidDensity(index);
-   dissolution_rate = GetTracerDissolutionRate(index, 0, 0);
-   porosity_n = GetElementSoilPorosity(index);
-   rho = GetFluidDensity(0, index, 0., 0., 0., theta);
-   if (GetTracerSolubilityModel(index, 0, 0) == 1) {
-   //if (GetRFProcessHeatReactModel())
-   solubility_coefficient =
- CalcTracerSolubilityCoefficient(index,0,0,1,PCSGetNODValueIndex("CONCENTRATION1",timelevel),1,PCSGetNODValueIndex("CONCENTRATION1",timelevel));
-   //else solubility_coefficient =
- CalcTracerSolubilityCoefficient(index,0,0,1,PCSGetNODValueIndex("CONCENTRATION1",timelevel),0,PCSGetNODValueIndex("CONCENTRATION1",timelevel));
-   } else {
-   solubility_coefficient = GetTracerSolubilityCoefficient(index, 0, 0);
-   }
-
-   porosity = porosity_n + 2 * porosity_n * dissolution_rate * val1 * rho
- * (solubility_coefficient - val0) * dt / density_rock;
-
-   if (porosity > porosity_limit)
-   porosity = porosity_limit;
-
-   break;
-
-   default:
-   DisplayMsgLn("Unknown porosity dependence model!");
-   break;
-
-   }
-
-   return porosity;
-   }
- */
-
 /**************************************************************************
    FEMLib-Method:
    Task:
@@ -6881,34 +6753,6 @@ double CMediumProperties::TortuosityFunction(long number, double* gp, double the
 	number = number;
 	assem = assem;
 
-	// static int nidx0,nidx1;
-	//----------------------------------------------------------------------
-	/*OK411
-	   int count_nodes;
-	   long* element_nodes = NULL;
-	   double primary_variable[10];		//OK To Do
-	   int i;
-	   int no_pcs_names =(int)pcs_name_vector.size();
-	   for(i=0;i<no_pcs_names;i++){
-	    nidx0 = PCSGetNODValueIndex(pcs_name_vector[i],0);
-	    nidx1 = PCSGetNODValueIndex(pcs_name_vector[i],1);
-	    if(mode==0){ // Gauss point values
-	      primary_variable[i] = (1.-theta)*InterpolValue(number,nidx0,gp[0],gp[1],gp[2]) \
-	 + theta*InterpolValue(number,nidx1,gp[0],gp[1],gp[2]);
-	   }
-	   else if(mode==1){ // Node values
-	   primary_variable[i] = (1.-theta)*GetNodeVal(number,nidx0) \
-	 + theta*GetNodeVal(number,nidx1);
-	   }
-	   else if(mode==2){ // Element average value
-	   count_nodes = ElNumberOfNodes[ElGetElementType(number) - 1];
-	   element_nodes = ElGetElementNodes(number);
-	   for (i = 0; i < count_nodes; i++)
-	   primary_variable[i] += GetNodeVal(element_nodes[i],nidx1);
-	   primary_variable[i]/= count_nodes;
-	   }
-	   } //For Loop
-	 */
 	switch (tortuosity_model)
 	{
 		case 0: // Tortuosity is read from a curve
@@ -7230,54 +7074,6 @@ double CMediumProperties::StorageFunction(long index, double* gp, double theta)
 	gp = gp;
 	index = index;
 
-	// int nn, i, Type;
-	// int idummy;
-	// double p; //WW, sigma, z[8];
-	// int phase;
-	// double density_solid, stress_eff,S;
-	// double coords[3];
-	// double znodes[8],ynodes[8],xnodes[8];
-	// double zelnodes[8],yelnodes[8],xelnodes[8];
-	// double Pie,angle;
-	// double sigma1,sigma2,sigma3;
-	// double a1,a2,a3,b1,b2,b3;
-	// double normx,normy,normz,normlen;
-	// WW double dircosl,  dircosm, dircosn;
-	// double tot_norm_stress, eff_norm_stress;
-	// int material_group;
-	// double x_mid, y_mid, z_mid, x_bore, y_bore, z_bore, distance;
-	// WW dircosl =    dircosm =    dircosn = 0.0;             //Initialise variable
-	// static int nidx0,nidx1;
-	// double primary_variable[10];		//OK To Do
-	// int count_nodes;
-	/*OK411
-	   long* element_nodes = NULL;
-	   int no_pcs_names =(int)pcs_name_vector.size();
-	   for(i=0;i<no_pcs_names;i++)
-	    {
-	     nidx0 = PCSGetNODValueIndex(pcs_name_vector[i],0);
-	     nidx1 = PCSGetNODValueIndex(pcs_name_vector[i],1);
-	     if(mode==0) // Gauss point values
-	      {
-	       primary_variable[i] = (1.-theta)*InterpolValue(index,nidx0,gp[0],gp[1],gp[2]) \
-	 + theta*InterpolValue(index,nidx1,gp[0],gp[1],gp[2]);		}
-	   else if(mode==1) // Node values
-	   {
-	   primary_variable[i] = (1.-theta)*GetNodeVal(index,nidx0) \
-	 + theta*GetNodeVal(index,nidx1);
-	   }
-	   else if(mode==2) // Element average value
-	   {
-	   //MX		count_nodes = ElNumberOfNodes[ElGetElementType(number) - 1];
-	   count_nodes = ElNumberOfNodes[ElGetElementType(index) - 1];
-	   //MX		element_nodes = ElGetElementNodes(number);
-	   element_nodes = ElGetElementNodes(index);
-	   for (i = 0; i < count_nodes; i++)
-	   primary_variable[i] += GetNodeVal(element_nodes[i],nidx1);
-	   primary_variable[i]/= count_nodes;
-	   }
-	   }
-	 */
 	switch (storage_model)
 	{
 		case 0:

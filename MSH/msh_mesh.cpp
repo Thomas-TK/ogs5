@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -26,6 +26,8 @@
 // BaseLib
 #include "memory.h"
 #include "Histogram.h"
+
+#include "FileTools.h"
 
 // GEOLib
 //#include "geo_pnt.h"
@@ -1506,7 +1508,7 @@ void CFEMesh::GetNODOnPLY(const GEOLIB::Polyline* const ply,
 	}
 
 	// compute nodes (and supporting points) along polyline
-	double search_radius(this->getMinEdgeLength() / 2); // getSearchLength());
+	double search_radius(this->getMinEdgeLength()); // getSearchLength());
 	if (!automatic)
 		search_radius = eps;
 	_mesh_nodes_along_polylines.push_back(MeshNodesAlongPolyline(ply, this, search_radius));
@@ -4070,16 +4072,8 @@ void CFEMesh::mHM2NeumannBC()
 	infiltration_files = *_geo_name + ".ifl";
 	std::ofstream infil(infiltration_files.c_str(), std::ios::trunc);
 
-	std::basic_string<char>::size_type indexChWin, indexChLinux;
-	indexChWin = indexChLinux = 0;
-	indexChWin = _geo_name->find_last_of('\\');
-	indexChLinux = _geo_name->find_last_of('/');
 	//
-	std::string file_path;
-	if (indexChWin != std::string::npos)
-		file_path = _geo_name->substr(0, indexChWin) + "\\";
-	else if (indexChLinux != std::string::npos)
-		file_path = _geo_name->substr(0, indexChLinux) + "/";
+	std::string file_path = pathDirname(*_geo_name);;
 
 	while (!ins.eof())
 	{

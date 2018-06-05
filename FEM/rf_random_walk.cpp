@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -6376,12 +6376,16 @@ void DATWriteParticleFile(int current_time_step)
 	sprintf(now, "%i", current_time_step);
 	string nowstr = now;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 	string vtk_file_name = FileName + "_RWPT_";
 	vtk_file_name += nowstr;
 	vtk_file_name += ".particles.vtk";
 =======
 	string vtk_file_name = pathJoin(defaultOutputPath, FileName.substr(FilePath.length(), FileName.length()));
+=======
+	string vtk_file_name = pathJoin(defaultOutputPath, pathBasename(FileName));
+>>>>>>> 1722a9ce74ea4f452d067635b0be9c3c626f50be
 	vtk_file_name += "_RWPT_" + nowstr + ".particles.vtk";
 >>>>>>> PullReqestBranch
 	fstream vtk_file (vtk_file_name.data(),ios::out);
@@ -6545,8 +6549,12 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 	char now[10];
 	sprintf(now,"%i",current_time_step);
 	string nowstr = now;
+<<<<<<< HEAD
 >>>>>>> PullReqestBranch
 	string vtk_file_name = FileName + "_RWPT_";
+=======
+	string vtk_file_name = pathJoin(defaultOutputPath, pathBasename(FileName)) + "_RWPT_";
+>>>>>>> 1722a9ce74ea4f452d067635b0be9c3c626f50be
 	vtk_file_name += control_plane_name;
 	vtk_file_name += "_";
 	std::ostringstream strs;
@@ -6577,7 +6585,6 @@ void DATWriteParticleControlPlaneFile(int current_time_step, string control_plan
 	if (pos==0)
 	vtk_file << "id, starting_time,  arrival_time_step_time, arrival-time-cp , start_coor_x, start_coor_y, start_coor_z, control_plane_x, control_plane_y, control_plane_z, time_correction_factor, x_back_shift " << endl;
 
-	int id = 0;
 	double starting_time = 0.0;
 	double time_correction = 0.0;
 	double arrival_time_step_time = 0.0;

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -247,7 +247,7 @@ void PETScLinearSolver::Solver()
 
 // #define PETSC34
 // kg44 quick fix to compile PETSC with version PETSCV3.4
-#ifdef USEPETSC34
+#if (PETSC_VERSION_NUMBER > 3030)
 	PetscTime(&v1);
 #else
 	PetscGetTime(&v1);
@@ -290,7 +290,7 @@ void PETScLinearSolver::Solver()
 // VecAssemblyEnd(x);
 
 // kg44 quick fix to compile PETSC with version PETSCV3.4
-#ifdef USEPETSC34
+#if (PETSC_VERSION_NUMBER > 3030)
 	PetscTime(&v2);
 #else
 	PetscGetTime(&v2);

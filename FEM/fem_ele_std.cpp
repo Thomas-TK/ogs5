@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -6778,7 +6778,7 @@ string CFiniteElementStd::Cal_GP_Velocity_DuMux(int* i_ind, CRFProcess* m_pcs, i
 					{
 						cout << "The program is canceled because there is a phase used which is not considered yet!"
 						     << "\n";
-						system("Pause");
+						//system("Pause");
 						exit(0);
 					}
 				}
@@ -10645,6 +10645,8 @@ void CFiniteElementStd::Assemble_RHS_M()
 		}
 	//======================================================================
 	SetHighOrderNodes();
+	ComputeGradShapefctInElement(false);
+
 	//
 	// Loop over Gauss points
 	for (gp = 0; gp < nGaussPoints; gp++)

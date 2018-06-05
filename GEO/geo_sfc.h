@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -120,9 +120,7 @@ extern void GEOSurfaceTopology(void);
 extern void GEOUnselectSFC(); // OK
 // TIN
 #define TIN_FILE_EXTENSION ".tin"
-extern void GEOWriteSurfaceTINs(const std::string&); // TIN
-extern void GEOCreateLayerSurfaceTINs(int, double); // TIN
-extern void GEOWriteSurfaceTINsTecplot(const std::string&);
+
 extern int sfc_ID_max;
 // MSH
 void MSHUnselectSFC(); // OK

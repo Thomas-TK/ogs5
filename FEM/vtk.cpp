@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -23,9 +23,8 @@
 #include "fem_ele_std.h" // for element velocity
 #include "makros.h"
 #include "rf_mmp_new.h"
-#include "OutputTools.h"
 #include "FileTools.h"
-#include "rf_random_walk.h"
+#include "OutputTools.h"
 
 using namespace std;
 
@@ -1317,7 +1316,7 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 			WriteDataArrayFooter(fin);
 	}
 
-	//MMP VALUES OUTPUT
+	//MMP
 	if (out->mmp_value_vector.size() > 0)
 	{
 		for (size_t i_mmp = 0; i_mmp < out->mmp_value_vector.size(); i_mmp++)
@@ -1344,10 +1343,20 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 					{
 						ele = msh->ele_vector[i_e];
 <<<<<<< HEAD
+<<<<<<< HEAD
                         double mat_value = getElementMMP(mmp_id, ele, m_pcs);
 =======
 						double mat_value = getElementMMP(mmp_id, ele, m_pcs);
 >>>>>>> PullReqestBranch
+=======
+						ele->SetOrder(false);
+						CFiniteElementStd* fem = m_pcs->GetAssember();
+						fem->ConfigElement(ele, false);
+						fem->Config();
+						fem->getShapeFunctionCentroid();
+						CMediumProperties* mmp = mmp_vector[ele->GetPatchIndex()];
+						double mat_value = ELEMENT_MMP_VALUES::getValue(mmp, mmp_id, i_e, 0, 1.0);
+>>>>>>> 1722a9ce74ea4f452d067635b0be9c3c626f50be
 						fin << mat_value << " ";
 					}
 					fin << "\n";
@@ -1378,6 +1387,7 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 	if (out->mfp_value_vector.size() > 0)
 	{
 <<<<<<< HEAD
+<<<<<<< HEAD
 //        double gp[3] = {.0, .0, .0};
 //        double theta = 1.0;
   		  static double dbuff0[20];
@@ -1388,6 +1398,9 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 		static double dbuff0[20];
 
 		for (size_t i_mfp=0; i_mfp<out->mfp_value_vector.size(); i_mfp++) 
+=======
+		for (size_t i_mfp = 0; i_mfp < out->mfp_value_vector.size(); i_mfp++)
+>>>>>>> 1722a9ce74ea4f452d067635b0be9c3c626f50be
 		{
 >>>>>>> PullReqestBranch
 			const std::string& mfp_name = out->mfp_value_vector[i_mfp];
@@ -1407,10 +1420,13 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 				{
 					fin << "          ";
 <<<<<<< HEAD
+<<<<<<< HEAD
                     int gp_r, gp_s, gp_t;
 =======
 					int gp_r, gp_s, gp_t;
 >>>>>>> PullReqestBranch
+=======
+>>>>>>> 1722a9ce74ea4f452d067635b0be9c3c626f50be
 					for (long i_e = 0; i_e < (long)msh->ele_vector.size(); i_e++)
 					{
 						ele = msh->ele_vector[i_e];
@@ -1418,6 +1434,7 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 						CFiniteElementStd* fem = m_pcs->GetAssember();
 						fem->ConfigElement(ele, false);
 						fem->Config();
+<<<<<<< HEAD
 <<<<<<< HEAD
                         fem->SetGaussPoint(0, gp_r, gp_s, gp_t);
                         fem->ComputeShapefct(1, dbuff0);
@@ -1429,6 +1446,11 @@ bool CVTK::WriteElementValue(std::fstream& fin, bool output_data, COutput* out, 
 						CFluidProperties* mfp = mfp_vector[0];
 						mfp->Fem_Ele_Std = fem;
 >>>>>>> PullReqestBranch
+=======
+						fem->getShapeFunctionCentroid();
+						CFluidProperties* mfp = mfp_vector[0];
+						mfp->SetFemEleStd(fem);
+>>>>>>> 1722a9ce74ea4f452d067635b0be9c3c626f50be
 						double mat_value = ELEMENT_MFP_VALUES::getValue(mfp, mfp_id);
 						fin << mat_value << " ";
 					}

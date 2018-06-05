@@ -3,7 +3,7 @@
  * 26/4/2010 LB Initial implementation
  *
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -43,5 +43,7 @@ std::string pathJoin(const std::string& path1, const std::string& path2);
 
 /// returns the current process working directory
 std::string getCwd();
+
+char getDirSep();
 
 #endif // FILETOOLS_H

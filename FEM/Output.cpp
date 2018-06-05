@@ -4,7 +4,7 @@
  *
  * Implementation of Output class
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -1482,17 +1482,6 @@ void COutput::WriteELEValuesTECData(fstream& tec_file)
 				tec_file << m_pcs_2->GetElementValue(i, ele_value_index_vector[j]) << " ";
 			}
 		}
-		/*
-		   int j;
-		   int eidx;
-		   char ele_value_char[20];
-		   int no_ele_values = (int)ele_value_vector.size();
-		   for(j=0;j<no_ele_values;j++){
-		   sprintf(ele_value_char,"%s",ele_value_vector[j].data());
-		   eidx = PCSGetELEValueIndex(ele_value_char);
-		   tec_file << ElGetElementVal(i,eidx) << " ";
-		   }
-		 */
 		tec_file << "\n";
 	}
 
@@ -1547,6 +1536,14 @@ double COutput::NODWritePLYDataTEC(int number)
 		tec_file_name += "_" + convertProcessTypeToString(getProcessType());
 	if (msh_type_name.size() > 0)
 		tec_file_name += "_" + msh_type_name;
+
+	//JM
+#if defined(USE_PETSC)
+	tec_file_name += "_" + mrank_str;
+	std::cout << "Tecplot filename: " << tec_file_name << "\n";
+#endif
+	//JM
+
 	if (is_TECPLOT || is_GNUPLOT)
 		tec_file_name += TEC_FILE_EXTENSION;
 	if (is_CSV)
@@ -1662,6 +1659,9 @@ double COutput::NODWritePLYDataTEC(int number)
 		if (is_CSV)
 			tec_file << "\"TIME\" ";
 		tec_file << "\"DIST\" ";
+#if defined(USE_PETSC)
+		tec_file << "\"X\", \"Y\", \"Z\" ";  //JM
+#endif
 		for (size_t k = 0; k < no_variables; k++)
 		{
 			tec_file << "\"" << _nod_value_vector[k] << "\" ";
@@ -1748,6 +1748,15 @@ double COutput::NODWritePLYDataTEC(int number)
 		// WW
 		//		long old_gnode = nodes_vector[m_ply->getOrderedPoints()[j]];
 		gnode = nodes_vector[j];
+
+#if defined(USE_PETSC)
+		//JM start
+		// XYZ
+		const double *x = m_msh->nod_vector[gnode]->getData();
+		for (size_t i = 0; i < 3; i++)
+			tec_file << x[i] << " ";
+		//JM end
+#endif
 		for (size_t k = 0; k < no_variables; k++)
 		{
 			// if(!(_nod_value_vector[k].compare("FLUX")==0))  // removed JOD, does not work for multiple flow processes
@@ -3479,7 +3488,6 @@ void COutput::PCONWriteDOMDataTEC()
 void COutput::WriteTECNodePCONData(fstream& tec_file)
 {
 	const size_t nName(_pcon_value_vector.size());
-	int nidx_dm[3];
 	std::vector<int> PconIndex(nName);
 
 //  m_msh = GetMSH();
@@ -3511,14 +3519,6 @@ void COutput::WriteTECNodePCONData(fstream& tec_file)
 		// XYZ
 		double x[3] = {m_msh->nod_vector[j]->getData()[0], m_msh->nod_vector[j]->getData()[1],
 		               m_msh->nod_vector[j]->getData()[2]};
-		//      x[0] = m_msh->nod_vector[j]->X();
-		//      x[1] = m_msh->nod_vector[j]->Y();
-		//      x[2] = m_msh->nod_vector[j]->Z();
-		// Amplifying DISPLACEMENTs
-		if (M_Process || MH_Process) // WW
-
-			for (size_t k = 0; k < max_dim + 1; k++)
-				x[k] += out_amplifier * m_pcs->GetNodeValue(m_msh->nod_vector[j]->GetIndex(), nidx_dm[k]);
 		for (size_t i = 0; i < 3; i++)
 			tec_file << x[i] << " ";
 // NOD values

@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -103,7 +103,6 @@ extern int StringReadStr(char** x, char* s, int* pos);
 // extern int TFDoubleNew (char *s, FILE *f );
 extern int TFString(char* x, FILE* f);
 
-extern char* ReadString(void);
 /* Liest Zeichenkette von Standardeingabe */
 extern char* StrUp(const char* s);
 /* wandelt s in Grossbuchstaben um */

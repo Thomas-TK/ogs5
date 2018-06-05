@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -44,7 +44,7 @@
 /*------------------------------------------------------------------------*/
 // Data file
 // OK411
-extern int ReadData(char*, GEOLIB::GEOObjects& geo_obj, std::string& unique_name);
+extern int ReadData(const char*, GEOLIB::GEOObjects& geo_obj, std::string& unique_name);
 /* PCS */
 #include "pcs_dm.h"
 #include "rf_pcs.h"
@@ -112,7 +112,7 @@ using process::CRFProcessDeformation;
             PreTimeloop
    Modification:
  ***************************************************************************/
-Problem::Problem (char* filename) :
+Problem::Problem (const char* filename) :
 	dt0(0.), print_result(true),
 	_linear_shapefunction_pool(NULL), _quadr_shapefunction_pool(NULL),
 	_geo_obj (new GEOLIB::GEOObjects), _geo_name (filename),
@@ -594,8 +594,10 @@ Problem::~Problem()
 	exe_flag = NULL;
 	//
 	PCSDestroyAllProcesses();
-	//
-	if (GetRFProcessProcessingAndActivation("MT") && GetRFProcessNumComponents() > 0)
+	// The body of GetRFProcessProcessingAndActivation just returns 0.
+        // Therefore, the following destruction never happens under
+	// if (GetRFProcessProcessingAndActivation("MT") && GetRFProcessNumComponents() > 0)
+	if (GetRFProcessNumComponents() > 0)
 	{
 		DestroyREACT(); // SB
 		cp_vec.clear(); // Destroy component properties vector
@@ -1355,8 +1357,7 @@ bool Problem::CouplingLoop()
 	bool run_flag[max_processes];
 	int outer_index, inner_index, inner_max; //, inner_min;
 	//
-	CRFProcess* a_pcs = NULL;
-	CRFProcess* b_pcs = NULL;
+
 	CTimeDiscretization* m_tim = NULL;
 	//
 	print_result = false;
@@ -1448,8 +1449,8 @@ bool Problem::CouplingLoop()
 			// ---------------------------------------
 			if (cpl_index >= 0 && run_flag[cpl_index])
 			{
-				a_pcs = total_processes[index];
-				b_pcs = total_processes[cpl_index];
+				CRFProcess* a_pcs = total_processes[index];
+				CRFProcess* b_pcs = total_processes[cpl_index];
 				//
 				inner_max = a_pcs->m_num->cpl_max_iterations;
 				//				inner_min = a_pcs->m_num->cpl_min_iterations; // variable set but never used
@@ -1516,7 +1517,7 @@ bool Problem::CouplingLoop()
 			{
 				// PERFORM AN OUTER COUPLING
 				// ---------------------------------------
-				a_pcs = total_processes[index];
+				CRFProcess* a_pcs = total_processes[index];
 				a_pcs->iter_outer_cpl = outer_index;
 				a_pcs->iter_inner_cpl = 0;
 				//
@@ -1983,7 +1984,7 @@ inline double Problem::MultiPhaseFlow()
 		{
 			std::cout << "Error running Eclipse!"
 			          << "\n";
-			system("Pause");
+			//system("Pause");
 			exit(0);
 		}
 	}
@@ -2017,7 +2018,7 @@ inline double Problem::MultiPhaseFlow()
 				    << "\n";
 				std::cout << "The run is terminated now ..."
 				          << "\n";
-				system("Pause");
+				//system("Pause");
 				exit(0);
 			}
 			FluidProp = MFPGet("GAS");
@@ -2028,7 +2029,7 @@ inline double Problem::MultiPhaseFlow()
 				    << "\n";
 				std::cout << "The run is terminated now ..."
 				          << "\n";
-				system("Pause");
+				//system("Pause");
 				exit(0);
 			}
 		}
@@ -4435,22 +4436,6 @@ void Problem::createShapeFunctionPool()
 			fem_assem->setShapeFunctionPool(_linear_shapefunction_pool, _quadr_shapefunction_pool);
 		}
 	}
-}
-
-/**************************************************************************
-   FEMLib-Method:
-   06/2009 OK Implementation
-**************************************************************************/
-bool MODCreate()
-{
-	PCSConfig(); // OK
-	if (!PCSCheck()) // OK
-	{
-		std::cout << "Not enough data for MOD creation.\n";
-		return false;
-	}
-	else
-		return true;
 }
 
 #ifdef BRNS

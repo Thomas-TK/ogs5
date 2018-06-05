@@ -1,6 +1,6 @@
 /**
  * \copyright
- * Copyright (c) 2015, OpenGeoSys Community (http://www.opengeosys.org)
+ * Copyright (c) 2018, OpenGeoSys Community (http://www.opengeosys.org)
  *            Distributed under a Modified BSD License.
  *              See accompanying file LICENSE.txt or
  *              http://www.opengeosys.org/project/license
@@ -335,9 +335,9 @@ CElem::~CElem()
    Programing:
    06/2005 WW Implementation
 **************************************************************************/
-void CElem::FillTransformMatrix()
+void CElem::FillTransformMatrix(const bool recompute_matrix)
 {
-	if (transform_tensor)
+	if (transform_tensor && recompute_matrix == false)
 		return;
 
 	double xx[3];
