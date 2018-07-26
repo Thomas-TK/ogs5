@@ -827,9 +827,13 @@ void RandomWalk::InterpolateVelocityOfTheParticleByInverseDistance(Particle* A)
 			vz /= porosity;
 		}
 
-		A->Vx += w[i] * vx;
-		A->Vy += w[i] * vy;
-		A->Vz += w[i] * vz;
+		//A->Vx += w[i] * vx;
+		//A->Vy += w[i] * vy;
+		//A->Vz += w[i] * vz;
+
+		A->Vx += vx;
+		A->Vy += vy;
+		A->Vz += vz;
 	}
 
 	// Release the temperary memory in this function

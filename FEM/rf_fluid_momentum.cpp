@@ -199,7 +199,7 @@ double CFluidMomentum::Execute(int loop_process_number)
 	m_pcs = PCSGet("RANDOM_WALK");
 	if (m_pcs && RWPTSwitch == 0)
 	{
-		if (m_msh->GetCoordinateFlag() != 32)
+		if (m_msh->GetCoordinateFlag() != 32 && m_msh->GetCoordinateFlag() != 22)
 			ConstructFractureNetworkTopology();
 		RWPTSwitch = 1;
 	}
